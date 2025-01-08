@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OURPLAYER DB</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a73e8;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #1557b0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress {
+            width: 0%;
+            height: 100%;
+            background: #1a73e8;
+            transition: width 0.3s ease;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .songs-list {
+            margin-top: 20px;
+        }
+
+        .song-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .song-item:hover {
+            background: #f5f5f5;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            button {
+                padding: 8px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="loginContainer">
+        <h1>OURPLAYER DB</h1>
+        <div id="loginForm">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button onclick="login()">Login</button>
+            <p style="text-align: center; margin-top: 10px;">
+                Don't have an account? <a href="#" onclick="showRegisterForm()">Register</a>
+            </p>
+        </div>
+    </div>
+
+    <div class="container" id="registerContainer" style="display: none;">
+        <h1>Register</h1>
+        <div class="form-group">
+            <label for="regUsername">Username:</label>
+            <input type="text" id="regUsername" required>
+        </div>
+        <div class="form-group">
+            <label for="regPassword">Password:</label>
+            <input type="password" id="regPassword" required>
+        </div>
+        <button onclick="register()">Register</button>
+        <p style="text-align: center; margin-top: 10px;">
+            Already have an account? <a href="#" onclick="showLoginForm()">Login</a>
+        </p>
+    </div>
+
+    <div class="container" id="uploadContainer" style="display: none;">
+        <h1>Upload Song</h1>
+        <div class="form-group">
+            <label for="songName">Song Name:</label>
+            <input type="text" id="songName" required>
+        </div>
+        <div class="form-group">
+            <label for="genre">Genre:</label>
+            <input type="text" id="genre" required>
+        </div>
+        <div class="form-group">
+            <label for="artistName">Artist Name:</label>
+            <input type="text" id="artistName" required>
+        </div>
+        <div class="form-group">
+            <label for="songFile">Song File:</label>
+            <input type="file" id="songFile" accept="audio/*" required>
+        </div>
+        <div class="progress-bar" id="progressBar">
+            <div class="progress" id="progress"></div>
+        </div>
+        <button onclick="uploadSong()">Upload</button>
+        <button onclick="logout()" style="margin-top: 10px; background: #dc3545;">Logout</button>
+
+        <div class="songs-list" id="songsList">
+            <h2>Your Songs</h2>
+            <!-- Songs will be listed here -->
+        </div>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <p id="modalMessage"></p>
+            <button onclick="closeModal()" style="margin-top: 10px;">Close</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA_-SNMVZQVQM-eDK3aY_kGYg2hFigWTfo",
+            authDomain: "web-test-1-d3b35.firebaseapp.com",
+            databaseURL: "https://web-test-1-d3b35-default-rtdb.firebaseio.com",
+            projectId: "web-test-1-d3b35",
+            storageBucket: "web-test-1-d3b35.appspot.com",
+            messagingSenderId: "1006418965402",
+            appId: "1:1006418965402:web:2f8b1801b2cf7935c1c023",
+            measurementId: "G-DD9YCHZ247"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const storage = getStorage(app);
+
+        let currentUser = null;
+
+        window.login = async function() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username.match(/[^a-zA-Z0-9]/)) {
+                showModal("Username can only contain letters and numbers");
+                return;
+            }
+
+            const userRef = ref(db, `users/${username}`);
+            const snapshot = await get(userRef);
+
+            if (snapshot.exists()) {
+                const userData = snapshot.val();
+                if (userData.password === password) {
+                    currentUser = username;
+                    showUploadForm();
+                    loadUserSongs();
+                } else {
+                    showModal("Incorrect password");
+                }
+            } else {
+                showModal("User not found");
+            }
+        };
+
+        window.register = async function() {
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+
+            if (username.match(/[^a-zA-Z0-9]/)) {
+                showModal("Username can only contain letters and numbers");
+                return;
+            }
+
+            const userRef = ref(db, `users/${username}`);
+            const snapshot = await get(userRef);
+
+            if (snapshot.exists()) {
+                showModal("Username already exists");
+                return;
+            }
+
+            await set(ref(db, `users/${username}`), {
+                password: password
+            });
+
+            showModal("Registration successful! Please login.");
+            showLoginForm();
+        };
+
+        window.uploadSong = async function() {
+            const songName = document.getElementById('songName').value;
+            const genre = document.getElementById('genre').value;
+            const artistName = document.getElementById('artistName').value;
+            const songFile = document.getElementById('songFile').files[0];
+
+            if (!songName || !genre || !artistName || !songFile) {
+                showModal("Please fill all fields");
+                return;
+            }
+
+            const songRef = ref(db, `songs/${songName}`);
+            const snapshot = await get(songRef);
+
+            if (snapshot.exists()) {
+                showModal("A song with this name already exists");
+                return;
+            }
+
+            const storageReference = storageRef(storage, `songs/${currentUser}/${songName}`);
+            const uploadTask = uploadBytesResumable(storageReference, songFile);
+
+            document.getElementById('progressBar').style.display = 'block';
+
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    document.getElementById('progress').style.width = progress + '%';
+                },
+                (error) => {
+                    showModal("Upload failed: " + error.message);
+                },
+                async () => {
+                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                    await set(ref(db, `songs/${songName}`), {
+                        name: songName,
+                        genre: genre,
+                        artist: artistName,
+                        url: downloadURL,
+                        uploadedBy: currentUser
+                    });
+
+                    document.getElementById('progressBar').style.display = 'none';
+                    document.getElementById('progress').style.width = '0%';
+                    clearInputs();
+                    showModal("Song uploaded successfully!");
+                    loadUserSongs();
+                }
+            );
+        };
+
+        window.loadUserSongs = async function() {
+            const songsRef = ref(db, 'songs');
+            const snapshot = await get(songsRef);
+            const songsList = document.getElementById('songsList');
+            songsList.innerHTML = '<h2>Your Songs</h2>';
+
+            if (snapshot.exists()) {
+                const songs = snapshot.val();
+                Object.values(songs).forEach(song => {
+                    if (song.uploadedBy === currentUser) {
+                        const songElement = document.createElement('div');
+                        songElement.className = 'song-item';
+                        songElement.innerHTML = `
+                            <strong>${song.name}</strong><br>
+                            Artist: ${song.artist}<br>
+                            Genre: ${song.genre}
+                        `;
+                        songElement.onclick = () => editSong(song);
+                        songsList.appendChild(songElement);
+                    }
+                });
+            }
+        };
+
+        window.editSong = function(song) {
+            document.getElementById('songName').value = song.name;
+            document.getElementById('genre').value = song.genre;
+            document.getElementById('artistName').value = song.artist;
+        };
+
+        window.logout = function() {
+            currentUser = null;
+            showLoginForm();
+            clearInputs();
+        };
+
+        window.showLoginForm = function() {
+            document.getElementById('loginContainer').style.display = 'block';
+            document.getElementById('registerContainer').style.display = 'none';
+            document.getElementById('uploadContainer').style.display = 'none';
+        };
+
+        window.showRegisterForm = function() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('registerContainer').style.display = 'block';
+            document.getElementById('uploadContainer').style.display = 'none';
+        };
+
+        window.showUploadForm = function() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('registerContainer').style.display = 'none';
+            document.getElementById('uploadContainer').style.display = 'block';
+        };
+
+        window.showModal = function(message) {
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('modal').style.display = 'block';
+        };
+
+        window.closeModal = function() {
+            document.getElementById('modal').style.display = 'none';
+        };
+
+        function clearInputs() {
+            document.getElementById('songName').value = '';
+            document.getElementById('genre').value = '';
+            document.getElementById('artistName').value = '';
+            document.getElementById('songFile').value = '';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        };
+    </script>
+</body>
+</html>
