@@ -80,6 +80,17 @@
             margin-left: 10px;
         }
 
+        .play-btn {
+            background: #1a73e8;
+            padding: 5px 10px;
+            width: auto;
+            margin-left: 10px;
+        }
+
+        .playing {
+            background: #ff5722;
+        }
+
         .progress-bar {
             width: 100%;
             height: 20px;
@@ -147,6 +158,16 @@
             margin-top: 10px;
         }
 
+        .audio-preview {
+            margin: 15px 0;
+            width: 100%;
+            display: none;
+        }
+
+        .audio-preview audio {
+            width: 100%;
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 15px;
@@ -159,17 +180,14 @@
     </style>
 </head>
 <body>
-    <!-- Previous HTML containers remain the same -->
     <div class="container" id="loginContainer">
         <h1>OURPLAYER DB</h1>
         <div id="loginForm">
             <div class="form-group">
-                <label for="username">Username:</label>
-                <input type="text" id="username" required>
+                <input type="text" id="username" required placeholder="Username">
             </div>
             <div class="form-group">
-                <label for="password">Password:</label>
-                <input type="password" id="password" required>
+                <input type="password" id="password" required placeholder="Password">
             </div>
             <button onclick="login()">Login</button>
             <p style="text-align: center; margin-top: 10px;">
@@ -181,12 +199,10 @@
     <div class="container" id="registerContainer" style="display: none;">
         <h1>Register</h1>
         <div class="form-group">
-            <label for="regUsername">Username:</label>
-            <input type="text" id="regUsername" required>
+            <input type="text" id="regUsername" required placeholder="Username">
         </div>
         <div class="form-group">
-            <label for="regPassword">Password:</label>
-            <input type="password" id="regPassword" required>
+            <input type="password" id="regPassword" required placeholder="Password">
         </div>
         <button onclick="register()">Register</button>
         <p style="text-align: center; margin-top: 10px;">
@@ -197,7 +213,7 @@
     <div class="container" id="uploadContainer" style="display: none;">
         <h1 id="formTitle">Upload Song</h1>
         <div class="user-header">
-            <span>Welcome, <span id="userDisplayName"></span>!</span>
+            <span>Welcome,&nbsp;<span style="font-weight: bold;" id="userDisplayName"></span>!</span>
         </div>
         <br>
         <div class="form-group">
@@ -214,7 +230,10 @@
         </div>
         <div class="form-group">
             <label for="songFile">Song File:</label>
-            <input type="file" id="songFile" accept="audio/*" required>
+            <input type="file" id="songFile" accept="audio/*" required onchange="handleFileSelect(event)">
+        </div>
+        <div class="audio-preview" id="uploadPreview">
+            <audio controls id="previewAudio"></audio>
         </div>
         <div class="progress-bar" id="progressBar">
             <div class="progress" id="progress"></div>
@@ -225,7 +244,6 @@
 
         <div class="songs-list" id="songsList">
             <h2>Your Songs</h2>
-            <!-- Songs will be listed here -->
         </div>
     </div>
 
@@ -241,7 +259,6 @@
         import { getDatabase, ref, set, get, child, remove } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js";
 
-        // Firebase configuration remains the same
         const firebaseConfig = {
             apiKey: "AIzaSyA_-SNMVZQVQM-eDK3aY_kGYg2hFigWTfo",
             authDomain: "web-test-1-d3b35.firebaseapp.com",
@@ -260,11 +277,74 @@
         let currentUser = null;
         let isEditing = false;
         let currentEditingSong = null;
+        let currentAudio = null;
 
-        // Previous functions remain the same (login, register, show/hide forms)
+        window.handleFileSelect = function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const preview = document.getElementById('uploadPreview');
+                const audio = document.getElementById('previewAudio');
+                
+                const fileURL = URL.createObjectURL(file);
+                audio.src = fileURL;
+                preview.style.display = 'block';
+            }
+        };
+
+        window.playPause = function(songUrl, button) {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                
+                // Reset all play buttons
+                document.querySelectorAll('.play-btn').forEach(btn => {
+                    btn.textContent = 'Play';
+                    btn.classList.remove('playing');
+                });
+            }
+
+            if (!currentAudio || currentAudio.src !== songUrl) {
+                currentAudio = new Audio(songUrl);
+                currentAudio.play();
+                button.textContent = 'Pause';
+                button.classList.add('playing');
+
+                currentAudio.onended = function() {
+                    button.textContent = 'Play';
+                    button.classList.remove('playing');
+                };
+            }
+        };
+
+        window.checkAuthStatus = function() {
+            const savedUser = localStorage.getItem('currentUser');
+            const savedPassword = localStorage.getItem('userPassword');
+            
+            if (savedUser && savedPassword) {
+                autoLogin(savedUser, savedPassword);
+            }
+        };
+
+        async function autoLogin(username, password) {
+            const userRef = ref(db, `users/${username}`);
+            const snapshot = await get(userRef);
+
+            if (snapshot.exists()) {
+                const userData = snapshot.val();
+                if (userData.password === password) {
+                    currentUser = username;
+                    document.getElementById('userDisplayName').textContent = username;
+                    showUploadForm();
+                    loadUserSongs();
+                } else {
+                    localStorage.removeItem('currentUser');
+                    localStorage.removeItem('userPassword');
+                }
+            }
+        }
+
         window.login = async function() {
             const username = document.getElementById('username').value;
-            
             const password = document.getElementById('password').value;
 
             if (username.match(/[^a-zA-Z0-9]/)) {
@@ -279,7 +359,9 @@
                 const userData = snapshot.val();
                 if (userData.password === password) {
                     currentUser = username;
-                    localStorage.setItem('UserName',username);
+                    localStorage.setItem('currentUser', username);
+                    localStorage.setItem('userPassword', password);
+                    document.getElementById('userDisplayName').textContent = username;
                     showUploadForm();
                     loadUserSongs();
                 } else {
@@ -315,7 +397,6 @@
             showLoginForm();
         };
 
-        // Modified upload function to handle both new uploads and edits
         window.uploadSong = async function() {
             const songName = document.getElementById('songName').value;
             const genre = document.getElementById('genre').value;
@@ -340,14 +421,12 @@
                 return;
             }
 
-            // If editing, delete old song first
             if (isEditing && currentEditingSong && currentEditingSong.name !== songName) {
                 await remove(ref(db, `songs/${currentEditingSong.name}`));
             }
 
             document.getElementById('progressBar').style.display = 'block';
 
-            // If a new file is selected or it's a new upload
             if (songFile) {
                 const storageReference = storageRef(storage, `songs/${currentUser}/${songName}`);
                 const uploadTask = uploadBytesResumable(storageReference, songFile);
@@ -366,7 +445,6 @@
                     }
                 );
             } else {
-                // If editing without changing the file
                 await updateSongDetails(songName, genre, artistName, currentEditingSong.url);
             }
         };
@@ -407,6 +485,7 @@
                                 Genre: ${song.genre}
                             </div>
                             <div class="song-actions">
+                                <button class="play-btn" onclick="playPause('${song.url}', this)">Play</button>
                                 <button class="edit-btn" onclick="editSong('${song.name}')">Edit</button>
                                 <button class="delete-btn" onclick="deleteSong('${song.name}', true)">Delete</button>
                             </div>
@@ -464,6 +543,7 @@
 
         window.cancelEdit = function() {
             resetForm();
+            document.getElementById('uploadPreview').style.display = 'none';
         };
 
         function resetForm() {
@@ -475,14 +555,28 @@
             document.getElementById('cancelButton').style.display = 'none';
             document.getElementById('songFile').required = true;
             document.getElementById('songFile').disabled = false;
-
+            
+            // Reset audio preview
+            document.getElementById('uploadPreview').style.display = 'none';
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
         }
 
         window.logout = function() {
             currentUser = null;
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('userPassword');
             showLoginForm();
             clearInputs();
             resetForm();
+            
+            // Stop any playing audio
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
         };
 
         window.showLoginForm = function() {
@@ -498,8 +592,6 @@
         };
 
         window.showUploadForm = function() {
-
-            document.getElementById('userDisplayName').innerHTML =localStorage.getItem('UserName');
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('registerContainer').style.display = 'none';
             document.getElementById('uploadContainer').style.display = 'block';
@@ -527,6 +619,9 @@
                 closeModal();
             }
         };
+
+        // Check authentication status when page loads
+        document.addEventListener('DOMContentLoaded', checkAuthStatus);
     </script>
 </body>
 </html>
