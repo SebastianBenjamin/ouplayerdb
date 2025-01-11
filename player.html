@@ -253,7 +253,7 @@
 
             <div class="player">
                 <div class="now-playing">
-                    <img id="currentSongImg" src="/api/placeholder/200/200" alt="Song cover" style="width: 200px; height: 200px; display: block; margin: 20px auto;">
+                    <img id="currentSongImg" src="https://img.icons8.com/ios-filled/200/40C057/apple-music.png" alt="Song cover" style="width: 200px; height: 200px; display: block; margin: 20px auto;">
                     <h3 id="currentSongTitle" style="text-align: center">No song playing</h3>
                 </div>
                 
@@ -584,7 +584,7 @@
             const songList = document.getElementById('songList');
             songList.innerHTML = window.songs.map((song, index) => `
                 <div class="song-item" onclick="selectSong(${index})">
-                    <img src="/api/placeholder/50/50" alt="Song cover">
+                    <img src="https://img.icons8.com/ios-filled/50/40C057/apple-music.png" alt="Song cover">
                     <div>
                         <h4>${song.name}</h4>
                         <p>${song.artist}</p>
