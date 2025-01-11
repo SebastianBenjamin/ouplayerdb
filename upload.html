@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Player Upload</title>
+    <title>Our Player/Upload</title>
     <style>
         * {
             margin: 0;
@@ -117,7 +117,7 @@
         .progress {
             width: 0%;
             height: 100%;
-            background: #1a73e8;
+            background: #1db954;
             transition: width 0.3s ease;
         }
 
@@ -195,36 +195,7 @@
     </style>
 </head>
 <body>
-    <div class="container" id="loginContainer">
-        <h1>Our Player Upload</h1>
-        <div id="loginForm">
-            <div class="form-group">
-                <input type="text" id="username" required placeholder="Username">
-            </div>
-            <div class="form-group">
-                <input type="password" id="password" required placeholder="Password">
-            </div>
-            <button onclick="login()">Login</button>
-            <p style="text-align: center; margin-top: 10px;">
-                Don't have an account? <a href="#" style="color: #198d42; text-decoration: none;" onclick="showRegisterForm()">Register</a>
-            </p>
-        </div>
-    </div>
-
-    <div class="container" id="registerContainer" style="display: none;">
-        <h1>Register</h1>
-        <div class="form-group">
-            <input type="text" id="regUsername" required placeholder="Username">
-        </div>
-        <div class="form-group">
-            <input type="password" id="regPassword" required placeholder="Password">
-        </div>
-        <button onclick="register()">Register</button>
-        <p style="text-align: center; margin-top: 10px;">
-            Already have an account? <a href="#" style="color: #198d42; text-decoration: none;" onclick="showLoginForm()">Login</a>
-        </p>
-    </div>
-
+  
     <div class="container" id="uploadContainer" style="display: none;">
         <h1 id="formTitle">Upload Song</h1>
         <div class="user-header">
@@ -293,7 +264,7 @@
         const db = getDatabase(app);
         const storage = getStorage(app);
 
-        let currentUser = null;
+        let currentUser = localStorage.getItem('currentUser');
         let isEditing = false;
         let currentEditingSong = null;
         let currentAudio = null;
@@ -335,86 +306,13 @@
             }
         };
 
-        window.checkAuthStatus = function() {
-            const savedUser = localStorage.getItem('currentUser');
-            const savedPassword = localStorage.getItem('userPassword');
-            
-            if (savedUser && savedPassword) {
-                autoLogin(savedUser, savedPassword);
-            }
-        };
+     
 
-        async function autoLogin(username, password) {
-            const userRef = ref(db, `users/${username}`);
-            const snapshot = await get(userRef);
+        
+                   
 
-            if (snapshot.exists()) {
-                const userData = snapshot.val();
-                if (userData.password === password) {
-                    currentUser = username;
-                    document.getElementById('userDisplayName').textContent = username;
-                    showUploadForm();
-                    loadUserSongs();
-                } else {
-                    localStorage.removeItem('currentUser');
-                    localStorage.removeItem('userPassword');
-                }
-            }
-        }
+       
 
-        window.login = async function() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            if (username.match(/[^a-zA-Z0-9]/)) {
-                showModal("Username can only contain letters and numbers");
-                return;
-            }
-
-            const userRef = ref(db, `users/${username}`);
-            const snapshot = await get(userRef);
-
-            if (snapshot.exists()) {
-                const userData = snapshot.val();
-                if (userData.password === password) {
-                    currentUser = username;
-                    localStorage.setItem('currentUser', username);
-                    localStorage.setItem('userPassword', password);
-                    document.getElementById('userDisplayName').textContent = username;
-                    showUploadForm();
-                    loadUserSongs();
-                } else {
-                    showModal("Incorrect password");
-                }
-            } else {
-                showModal("User not found");
-            }
-        };
-
-        window.register = async function() {
-            const username = document.getElementById('regUsername').value;
-            const password = document.getElementById('regPassword').value;
-
-            if (username.match(/[^a-zA-Z0-9]/)) {
-                showModal("Username can only contain letters and numbers");
-                return;
-            }
-
-            const userRef = ref(db, `users/${username}`);
-            const snapshot = await get(userRef);
-
-            if (snapshot.exists()) {
-                showModal("Username already exists");
-                return;
-            }
-
-            await set(ref(db, `users/${username}`), {
-                password: password
-            });
-
-            showModal("Registration successful! Please login.");
-            showLoginForm();
-        };
 
         window.uploadSong = async function() {
             const songName = document.getElementById('songName').value;
@@ -588,7 +486,7 @@
             currentUser = null;
             localStorage.removeItem('currentUser');
             localStorage.removeItem('userPassword');
-            showLoginForm();
+          window.history.back();
             clearInputs();
             resetForm();
             
@@ -599,21 +497,10 @@
             }
         };
 
-        window.showLoginForm = function() {
-            document.getElementById('loginContainer').style.display = 'block';
-            document.getElementById('registerContainer').style.display = 'none';
-            document.getElementById('uploadContainer').style.display = 'none';
-        };
-
-        window.showRegisterForm = function() {
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('registerContainer').style.display = 'block';
-            document.getElementById('uploadContainer').style.display = 'none';
-        };
+       
 
         window.showUploadForm = function() {
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('registerContainer').style.display = 'none';
+           
             document.getElementById('uploadContainer').style.display = 'block';
         };
 
@@ -639,9 +526,9 @@
                 closeModal();
             }
         };
-
-        // Check authentication status when page loads
-        document.addEventListener('DOMContentLoaded', checkAuthStatus);
+        document.getElementById('userDisplayName').textContent = currentUser;
+                    showUploadForm();
+                    loadUserSongs();
     </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
+    <title> s</title>
     <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js" type="module"></script>
@@ -105,6 +105,20 @@
             margin-right: 10px;
             border-radius: 5px;
         }
+        .genre-select {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 5px;
+    background: #3a3a3a;
+    color: white;
+    min-height: 100px;
+}
+
+.genre-select option {
+    padding: 5px;
+}
 
         .controls {
             display: flex;
@@ -239,13 +253,7 @@
 </head>
 <body>
     <div class="container">
-        <!-- Login Container -->
-        <div id="loginContainer" class="auth-container">
-            <h2>Login</h2>
-            <input type="text" id="username" placeholder="Username">
-            <input type="password" id="password" placeholder="Password">
-            <button class="btn" onclick="login()">Login</button>
-        </div>
+      
 
         <!-- Room Selection Container -->
         <div id="roomContainer" class="room-container">
@@ -258,11 +266,9 @@
             <div id="createRoomTab">
                 <input type="text" id="newRoomName" placeholder="Room Name">
                 <input type="password" id="newRoomPassword" placeholder="Room Password">
-                
-                <div id="optionsContainer">
-                    <!-- Options checkboxes will be dynamically rendered here -->
-                </div>
-                
+                <select id="genreSelection" multiple class="genre-select">
+                    <!-- Options will be populated dynamically -->
+                </select>
                 <button class="btn" onclick="createRoom()">Create Room</button>
             </div>
             
@@ -322,74 +328,84 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getDatabase, ref, onValue, set, get, remove } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, get, remove } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyA_-SNMVZQVQM-eDK3aY_kGYg2hFigWTfo",
-            authDomain: "web-test-1-d3b35.firebaseapp.com",
-            databaseURL: "https://web-test-1-d3b35-default-rtdb.firebaseio.com",
-            projectId: "web-test-1-d3b35",
-            storageBucket: "web-test-1-d3b35.appspot.com",
-            messagingSenderId: "1006418965402",
-            appId: "1:1006418965402:web:2f8b1801b2cf7935c1c023",
-            measurementId: "G-DD9YCHZ247"
-        };
+const firebaseConfig = {
+    apiKey: "AIzaSyA_-SNMVZQVQM-eDK3aY_kGYg2hFigWTfo",
+    authDomain: "web-test-1-d3b35.firebaseapp.com",
+    databaseURL: "https://web-test-1-d3b35-default-rtdb.firebaseio.com",
+    projectId: "web-test-1-d3b35",
+    storageBucket: "web-test-1-d3b35.appspot.com",
+    messagingSenderId: "1006418965402",
+    appId: "1:1006418965402:web:2f8b1801b2cf7935c1c023",
+    measurementId: "G-DD9YCHZ247"
+};
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-        // Global state
-        window.currentUser = null;
-        window.currentRoom = null;
-        window.isPlayer = false;
-        window.audio = new Audio();
-        window.currentSongIndex = 0;
-        window.songs = [];
+// Global state
+window.currentUser = localStorage.getItem('currentUser');
+window.currentRoom = null;
+window.isPlayer = false;
+window.audio = new Audio();
+window.currentSongIndex = 0;
+window.songs = [];
+window.filteredSongs = [];
+         
+        
+        loadSongs();
+        loadAvailableOptions();
+  
+// Load songs
+async function loadSongs() {
+    const songsRef = ref(db, 'songs');
+    const snapshot = await get(songsRef);
+    if (snapshot.exists()) {
+        window.songs = Object.values(snapshot.val());
+    }
+}
 
-        // Login function
-        window.login = async () => {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+// Load available genres
+async function loadAvailableOptions() {
+    const optionsRef = ref(db, 'Genre');
+    const snapshot = await get(optionsRef);
 
-            const usersRef = ref(db, 'users/' + username);
-            const snapshot = await get(usersRef);
-            
-            if (snapshot.exists() && snapshot.val().password === password) {
-                window.currentUser = username;
-                localStorage.setItem('currentUser', username);
-                document.getElementById('loginContainer').style.display = 'none';
-                const savedRoom = localStorage.getItem('room');
-        const savedRoomPassword = localStorage.getItem('roomp');
+    if (snapshot.exists()) {
+        const options = snapshot.val();
+        const genreSelect = document.getElementById('genreSelection');
+        
+        // Clear existing options
+        genreSelect.innerHTML = '';
+        
+        // Add options to select element
+        Object.entries(options).forEach(([key, value]) => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = value;
+            genreSelect.appendChild(option);
+        });
+        
+        // Add instructions
+        const instruction = document.createElement('option');
+        instruction.disabled = true;
+        instruction.selected = true;
+        instruction.textContent = 'Hold Ctrl/Cmd to select multiple genres';
+        genreSelect.insertBefore(instruction, genreSelect.firstChild);
+    } else {
+        alert("No genres found in database.");
+    }
+}
 
-        if (savedRoom && savedRoomPassword) {
-            await joinRoom();
-            
-        } else {
-            
-            document.getElementById('roomContainer').style.display = 'block';
-        }
-                loadSongs();
-            } else {
-                alert('Invalid credentials');
-            }
-        };
-
-        // Load songs
-        async function loadSongs() {
-            const songsRef = ref(db, 'songs');
-            const snapshot = await get(songsRef);
-            if (snapshot.exists()) {
-                window.songs = Object.values(snapshot.val());
-            }
-        }
-
-        // Room management
-        window.createRoom = async () => {
+// Create Room
+window.createRoom = async () => {
     const roomName = document.getElementById('newRoomName').value;
     const roomPassword = document.getElementById('newRoomPassword').value;
-    const genreSelection = Array.from(document.getElementById('genreSelection').selectedOptions)
-        .map(option => option.value);
+    const genreSelect = document.getElementById('genreSelection');
+    const genreSelection = Array.from(genreSelect.selectedOptions)
+        .map(option => option.value)
+        .filter(value => value !== 'Hold Ctrl/Cmd to select multiple genres');
 
     if (!roomName || !roomPassword) {
         alert('Please enter room name and password');
@@ -418,47 +434,256 @@
         }
     });
 
+    localStorage.setItem('room', roomName);
+    localStorage.setItem('roomp', roomPassword);
     joinExistingRoom(roomName);
 };
 
-        // Delete Room Function
+// Join Room
+window.joinRoom = async () => {
+    let roomName, roomPassword;
+    if (!localStorage.getItem('room')) {
+        roomName = document.getElementById('joinRoomName').value;
+        roomPassword = document.getElementById('joinRoomPassword').value;
+        localStorage.setItem('room', roomName);
+        localStorage.setItem('roomp', roomPassword);
+    } else {
+        roomName = localStorage.getItem('room');
+        roomPassword = localStorage.getItem('roomp');
+    }
+
+    const roomRef = ref(db, 'rooms/' + roomName);
+    const snapshot = await get(roomRef);
+
+    if (!snapshot.exists()) {
+        alert('Room not found');
+        localStorage.removeItem('room');
+        localStorage.removeItem('roomp');
+        return;
+    }
+
+    if (snapshot.val().password !== roomPassword) {
+        alert('Incorrect password');
+        return;
+    }
+
+    await set(ref(db, `rooms/${roomName}/members/${window.currentUser}`), true);
+    joinExistingRoom(roomName);
+};
+
+// Join Existing Room
+async function joinExistingRoom(roomName) {
+    window.currentRoom = roomName;
+    document.getElementById('roomContainer').style.display = 'none';
+    document.getElementById('playerContainer').style.display = 'block';
+    document.getElementById('roomNameDisplay').textContent = `Room: ${roomName}`;
+
+    initializeRoomListeners();
+    await renderSongList();
+}
+
+// Initialize Room Listeners
+function initializeRoomListeners() {
+    const roomRef = ref(db, `rooms/${window.currentRoom}`);
+    onValue(roomRef, async (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        window.isPlayer = data.player === window.currentUser;
+        document.getElementById('roleIndicator').textContent = `Role: ${window.isPlayer ? 'Player' : 'Listener'}`;
+
+        const membersList = document.getElementById('membersList');
+        membersList.innerHTML = Object.keys(data.members || {}).map(member => `
+            <div class="member-item">
+                <span>${member} ${member === data.player ? '(Player)' : ''}</span>
+                ${window.isPlayer && member !== window.currentUser ? 
+                    `<button class="btn" onclick="makePlayer('${member}')">Make Player</button>` : 
+                    ''}
+            </div>
+        `).join('');
+
+        if (data.currentSong) {
+            updatePlayerState(data.currentSong);
+        }
+
+        // Re-render song list when room data changes (e.g., genres update)
+        await renderSongList();
+    });
+}
+
+// Playback Controls
+window.togglePlay = () => {
+    if (!window.isPlayer && !window.audio.src) return;
+    
+    const newStatus = window.audio.paused ? 'playing' : 'paused';
+    updateRoomPlayback({
+        status: newStatus,
+        currentTime: window.audio.currentTime
+    });
+};
+
+window.selectSong = async (index) => {
+    if (!window.isPlayer) {
+        alert('Only the player can select songs');
+        return;
+    }
+    
+    const song = window.filteredSongs[index];
+    window.currentSongIndex = index;
+    
+    await updateRoomPlayback({
+        songIndex: index,
+        songName: song.name,
+        status: 'playing',
+        currentTime: 0
+    });
+};
+
+async function updateRoomPlayback(state) {
+    await set(ref(db, `rooms/${window.currentRoom}/currentSong`), {
+        ...state,
+        timestamp: Date.now()
+    });
+}
+
+function updatePlayerState(data) {
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const currentSongTitle = document.getElementById('currentSongTitle');
+    
+    if (data.songIndex !== undefined) {
+        const song = window.filteredSongs[data.songIndex];
+        if (song) {
+            window.audio.src = song.url;
+            currentSongTitle.textContent = song.name;
+        }
+    }
+
+    if (data.status === 'playing') {
+        const timeDiff = (Date.now() - data.timestamp) / 1000;
+        window.audio.currentTime = data.currentTime + timeDiff;
+        window.audio.play();
+        playPauseBtn.textContent = '⏸';
+    } else {
+        window.audio.pause();
+        window.audio.currentTime = data.currentTime;
+        playPauseBtn.textContent = '▶';
+    }
+
+    updateProgressBar();
+}
+
+// Progress Bar and Time Display
+function updateProgressBar() {
+    const progress = document.getElementById('progress');
+    const currentTimeDisplay = document.getElementById('currentTime');
+    const durationDisplay = document.getElementById('duration');
+
+    if (window.audio.duration) {
+        const percentage = (window.audio.currentTime / window.audio.duration) * 100;
+        progress.style.width = percentage + '%';
+        currentTimeDisplay.textContent = formatTime(window.audio.currentTime);
+        durationDisplay.textContent = formatTime(window.audio.duration);
+    }
+}
+
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+// Progress Bar Click Handler
+document.getElementById('progressBar').addEventListener('click', (e) => {
+    if (!window.isPlayer) return;
+    
+    const progressBar = e.currentTarget;
+    const clickPosition = (e.clientX - progressBar.getBoundingClientRect().left) / progressBar.offsetWidth;
+    const newTime = clickPosition * window.audio.duration;
+    
+    updateRoomPlayback({
+        currentTime: newTime,
+        status: window.audio.paused ? 'paused' : 'playing',
+        timestamp: Date.now()
+    });
+});
+
+// Previous/Next Controls
+window.previousSong = () => {
+    if (!window.isPlayer) return;
+    window.currentSongIndex = (window.currentSongIndex - 1 + window.filteredSongs.length) % window.filteredSongs.length;
+    selectSong(window.currentSongIndex);
+};
+
+window.nextSong = () => {
+    if (!window.isPlayer) return;
+    window.currentSongIndex = (window.currentSongIndex + 1) % window.filteredSongs.length;
+    selectSong(window.currentSongIndex);
+};
+
+// Room Management
+window.makePlayer = async (username) => {
+    if (!window.isPlayer) return;
+    await set(ref(db, `rooms/${window.currentRoom}/player`), username);
+};
+
+window.leaveRoom = async () => {
+    localStorage.removeItem('room');
+    localStorage.removeItem('roomp');
+    if (window.currentRoom) {
+        const roomRef = ref(db, `rooms/${window.currentRoom}`);
+        const snapshot = await get(roomRef);
+        const roomData = snapshot.val();
+
+        await remove(ref(db, `rooms/${window.currentRoom}/members/${window.currentUser}`));
+
+        if (roomData.player === window.currentUser) {
+            const remainingMembers = Object.keys(roomData.members || {}).filter(m => m !== window.currentUser);
+            if (remainingMembers.length > 0) {
+                await set(ref(db, `rooms/${window.currentRoom}/player`), remainingMembers[0]);
+            }
+        }
+
+        if (Object.keys(roomData.members || {}).length <= 1) {
+            await remove(roomRef);
+        }
+    }
+
+    window.currentRoom = null;
+    window.isPlayer = false;
+    window.audio.pause();
+    window.audio.src = '';
+    document.getElementById('playerContainer').style.display = 'none';
+    document.getElementById('roomContainer').style.display = 'block';
+};
+
+// Delete Room
 window.deleteRoom = async () => {
     const roomRef = ref(db, `rooms/${window.currentRoom}`);
     const snapshot = await get(roomRef);
 
     if (!snapshot.exists()) {
         alert('Room not found');
-         // Clear local storage
-         localStorage.removeItem('room');
+        localStorage.removeItem('room');
         localStorage.removeItem('roomp');
-
         return;
-
     }
 
     const roomData = snapshot.val();
 
-    // Only allow the player (room owner) to delete the room
     if (roomData.player !== window.currentUser) {
         alert('Only the room owner can delete the room');
         return;
     }
 
-    // Confirm deletion
     const confirmation = confirm(`Are you sure you want to delete the room: ${window.currentRoom}? This action cannot be undone.`);
     if (!confirmation) return;
 
-    // Delete the room
     try {
         await remove(roomRef);
         alert(`Room '${window.currentRoom}' deleted successfully!`);
         window.currentRoom = null;
-
-        // Clear local storage
         localStorage.removeItem('room');
         localStorage.removeItem('roomp');
-
-        // Navigate back to the room selection screen
         document.getElementById('playerContainer').style.display = 'none';
         document.getElementById('roomContainer').style.display = 'block';
     } catch (error) {
@@ -467,353 +692,50 @@ window.deleteRoom = async () => {
     }
 };
 
-async function loadAvailableOptions() {
-    const optionsRef = ref(db, 'Genre');
-    const snapshot = await get(optionsRef);
-
-    if (snapshot.exists()) {
-        const options = snapshot.val();
-        const optionsContainer = document.getElementById('optionsContainer');
-        
-        // Render checkboxes for each option
-        optionsContainer.innerHTML = Object.keys(options).map(option => `
-            <div>
-                <input type="checkbox" class="room-option" value="${option}">
-                <p>${options[option]}</p>
-            </div>
-        `).join('');
-    } else {
-        alert("No genres found in database.");
-    }
-}
-
-
-// Call this function when the page loads
-loadAvailableOptions();
-
-// Create Room with Selected Options
-window.createRoom = async () => {
-    const roomName = document.getElementById('newRoomName').value;
-    const roomPassword = document.getElementById('newRoomPassword').value;
-
-    if (!roomName || !roomPassword) {
-        alert('Please enter room name and password');
-        return;
-    }
-    const genreSelection = Array.from(document.querySelectorAll('.room-option:checked'))
-    .map(option => option.value);
-
-
-    const roomRef = ref(db, 'rooms/' + roomName);
-    const snapshot = await get(roomRef);
-
-    if (snapshot.exists()) {
-        alert('Room already exists');
-        return;
-    }
-
-    // Save room with selected options
-    await set(roomRef, {
-    password: roomPassword,
-    player: window.currentUser,
-    genres: genreSelection, 
-    members: {
-        [window.currentUser]: true
-    }
-});
-
-localStorage.setItem('room',roomName);
-        localStorage.setItem('roomp',roomPassword);
-    joinExistingRoom(roomName);
+// Tab Management
+window.showTab = (tabName) => {
+    document.getElementById('createRoomTab').style.display = tabName === 'create' ? 'block' : 'none';
+    document.getElementById('joinRoomTab').style.display = tabName === 'join' ? 'block' : 'none';
+    
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.textContent.toLowerCase().includes(tabName)) {
+            tab.classList.add('active');
+        }
+    });
 };
-window.joinRoom = async () => {
-    var roomName ;var roomPassword;
-    if(!localStorage.getItem('room')){
-        roomName= document.getElementById('joinRoomName').value;
-        roomPassword= document.getElementById('joinRoomPassword').value;
-        localStorage.setItem('room',roomName);
-        localStorage.setItem('roomp',roomPassword);
-                        
-    }else{
-        roomName=localStorage.getItem('room');
-        roomPassword=localStorage.getItem('roomp');
-    }
-
-            const roomRef = ref(db, 'rooms/' + roomName);
-            const snapshot = await get(roomRef);
-
-            if (!snapshot.exists()) {
-                alert('Room not found');
-                return;
-            }
-
-            if (snapshot.val().password !== roomPassword) {
-                alert('Incorrect password');
-                return;
-            }
-
-            await set(ref(db, `rooms/${roomName}/members/${window.currentUser}`), true);
-            joinExistingRoom(roomName);
-        };
-
-// Join Room and Display Selected Options
-async function joinExistingRoom(roomName) {
-    window.currentRoom = roomName;
-    document.getElementById('roomContainer').style.display = 'none';
-    document.getElementById('playerContainer').style.display = 'block';
-    document.getElementById('roomNameDisplay').textContent = `Room: ${roomName}`;
-
-    const roomRef = ref(db, `rooms/${roomName}`);
-    const snapshot = await get(roomRef);
-
-    if (snapshot.exists()) {
-        const data = snapshot.val();
-        const optionsDisplay = data.options ? data.options.join(', ') : 'None';
-
-        // Display the selected options in the room UI
-        const membersList = document.getElementById('membersList');
-        membersList.innerHTML = `
-            <div class="room-options">
-                <h3>Selected Options</h3>
-                <p>${optionsDisplay}</p>
-            </div>
-        `;
-    }
-
-    initializeRoomListeners();
-    renderSongList();
-}
-
-       
-
-        function initializeRoomListeners() {
-            // Listen for room changes
-            const roomRef = ref(db, `rooms/${window.currentRoom}`);
-            onValue(roomRef, (snapshot) => {
-                const data = snapshot.val();
-                if (!data) return;
-
-                // Update player status
-                window.isPlayer = data.player === window.currentUser;
-                document.getElementById('roleIndicator').textContent = `Role: ${window.isPlayer ? 'Player' : 'Listener'}`;
-
-                // Update members list
-                const membersList = document.getElementById('membersList');
-                membersList.innerHTML = Object.keys(data.members || {}).map(member => `
-                    <div class="member-item">
-                        <span>${member} ${member === data.player ? '(Player)' : ''}</span>
-                        ${window.isPlayer && member !== window.currentUser ? 
-                            `<button class="btn" onclick="makePlayer('${member}')">Make Player</button>` : 
-                            ''}
-                    </div>
-                `).join('');
-
-                // Update playback state
-                if (data.currentSong) {
-                    updatePlayerState(data.currentSong);
-                }
-            });
-        }
-
-        // Playback controls
-        window.togglePlay = () => {
-            if (!window.isPlayer && !window.audio.src) return;
-            
-            const newStatus = window.audio.paused ? 'playing' : 'paused';
-            updateRoomPlayback({
-                status: newStatus,
-                currentTime: window.audio.currentTime
-            });
-        };
-
-        window.selectSong = async (index) => {
-            if (!window.isPlayer) {
-                alert('Only the player can select songs');
-                return;
-            }
-            
-            const song = window.songs[index];
-            window.currentSongIndex = index;
-            
-            await updateRoomPlayback({
-                songIndex: index,
-                songName: song.name,
-                status: 'playing',
-                currentTime: 0
-            });
-        };
-
-        async function updateRoomPlayback(state) {
-            await set(ref(db, `rooms/${window.currentRoom}/currentSong`), {
-                ...state,
-                timestamp: Date.now()
-            });
-        }
-
-        function updatePlayerState(data) {
-            const playPauseBtn = document.getElementById('playPauseBtn');
-            const currentSongTitle = document.getElementById('currentSongTitle');
-            
-            if (data.songIndex !== undefined) {
-                const song = window.songs[data.songIndex];
-                window.audio.src = song.url;
-                currentSongTitle.textContent = song.name;
-            }
-
-            if (data.status === 'playing') {
-                const timeDiff = (Date.now() - data.timestamp) / 1000;
-                window.audio.currentTime = data.currentTime + timeDiff;
-                window.audio.play();
-                playPauseBtn.textContent = '⏸';
-            } else {
-                window.audio.pause();
-                window.audio.currentTime = data.currentTime;
-                playPauseBtn.textContent = '▶';
-            }
-
-            updateProgressBar();
-        }
-
-        // Progress bar and time display
-        function updateProgressBar() {
-            const progress = document.getElementById('progress');
-            const currentTimeDisplay = document.getElementById('currentTime');
-            const durationDisplay = document.getElementById('duration');
-
-            if (window.audio.duration) {
-                const percentage = (window.audio.currentTime / window.audio.duration) * 100;
-                progress.style.width = percentage + '%';
-                currentTimeDisplay.textContent = formatTime(window.audio.currentTime);
-                durationDisplay.textContent = formatTime(window.audio.duration);
-            }
-        }
-
-        function formatTime(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = Math.floor(seconds % 60);
-            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-        }
-
-        // Progress bar click handler
-        document.getElementById('progressBar').addEventListener('click', (e) => {
-            if (!window.isPlayer) return;
-            
-            const progressBar = e.currentTarget;
-            const clickPosition = (e.clientX - progressBar.getBoundingClientRect().left) / progressBar.offsetWidth;
-            const newTime = clickPosition * window.audio.duration;
-            
-            updateRoomPlayback({
-                currentTime: newTime,
-                status: window.audio.paused ? 'paused' : 'playing',
-                timestamp: Date.now()
-            });
-        });
-
-        // Previous/Next song controls
-        window.previousSong = () => {
-            if (!window.isPlayer) return;
-            window.currentSongIndex = (window.currentSongIndex - 1 + window.songs.length) % window.songs.length;
-            selectSong(window.currentSongIndex);
-        };
-
-        window.nextSong = () => {
-            if (!window.isPlayer) return;
-            window.currentSongIndex = (window.currentSongIndex + 1) % window.songs.length;
-            selectSong(window.currentSongIndex);
-        };
-
-        // Room management functions
-        window.makePlayer = async (username) => {
-            if (!window.isPlayer) return;
-            await set(ref(db, `rooms/${window.currentRoom}/player`), username);
-        };
-
-        window.leaveRoom = async () => {
-            localStorage.removeItem('room');
-            localStorage.removeItem('roomp');
-            if (window.currentRoom) {
-                const roomRef = ref(db, `rooms/${window.currentRoom}`);
-                const snapshot = await get(roomRef);
-                const roomData = snapshot.val();
-
-                // Remove member from room
-                await remove(ref(db, `rooms/${window.currentRoom}/members/${window.currentUser}`));
-
-                // If player is leaving, assign new player if there are other members
-                if (roomData.player === window.currentUser) {
-                    const remainingMembers = Object.keys(roomData.members || {}).filter(m => m !== window.currentUser);
-                    if (remainingMembers.length > 0) {
-                        await set(ref(db, `rooms/${window.currentRoom}/player`), remainingMembers[0]);
-                    }
-                }
-
-                // If last member, delete room
-                if (Object.keys(roomData.members || {}).length <= 1) {
-                    await remove(roomRef);
-                }
-            }
-
-            // Reset state and return to room selection
-            window.currentRoom = null;
-            window.isPlayer = false;
-            window.audio.pause();
-            window.audio.src = '';
-            document.getElementById('playerContainer').style.display = 'none';
-            document.getElementById('roomContainer').style.display = 'block';
-        };
-
-        // Tab management
-        window.showTab = (tabName) => {
-            document.getElementById('createRoomTab').style.display = tabName === 'create' ? 'block' : 'none';
-            document.getElementById('joinRoomTab').style.display = tabName === 'join' ? 'block' : 'none';
-            
-            const tabs = document.querySelectorAll('.tab');
-            tabs.forEach(tab => {
-                tab.classList.remove('active');
-                if (tab.textContent.toLowerCase().includes(tabName)) {
-                    tab.classList.add('active');
-                }
-            });
-        };
-
-        // Render song list
-        async function renderSongList() {
+// Render Song List
+async function renderSongList() {
     const roomRef = ref(db, `rooms/${window.currentRoom}`);
     const snapshot = await get(roomRef);
-    document.body.title=`Our Player/${window.currentRoom}`;
+    document.title = `Our Player/${window.currentRoom}`;
+    
     if (!snapshot.exists()) {
         alert('Room not found');
+        localStorage.removeItem('room');
+        localStorage.removeItem('roomp');
         return;
     }
 
     const roomData = snapshot.val();
     const roomGenres = roomData.genres;
 
-    const filteredSongs = window.songs.filter(song => roomGenres.includes(song.genre));
+    window.filteredSongs = window.songs.filter(song => roomGenres.includes(song.genre));
 
-    
     const songList = document.getElementById('songList');
-    songList.innerHTML = filteredSongs.map((song, index) => `
-       <div class="song-item" onclick="selectSong(${index})">
-                    <img src="https://img.icons8.com/ios-filled/50/40C057/apple-music.png" alt="Song cover">
-                    <div>
-                        <h4>${song.name}</h4>
-                        <p>${song.artist}</p>
-                    </div>
-                </div>
+    songList.innerHTML = window.filteredSongs.map((song, index) => `
+        <div class="song-item" onclick="selectSong(${index})">
+            <img src="https://img.icons8.com/ios-filled/50/40C057/apple-music.png" alt="Song cover">
+            <div>
+                <h4>${song.name}</h4>
+                <p>${song.artist}</p>
+            </div>
+        </div>
     `).join('');
 }
 
-
-        // Auto-reconnect on page load
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            window.currentUser = savedUser;
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('roomContainer').style.display = 'block';
-            loadSongs();
-        }
-        const savedRoom = localStorage.getItem('room');
+const savedRoom = localStorage.getItem('room');
         const savedRoomPassword = localStorage.getItem('roomp');
 
         if (savedRoom && savedRoomPassword) {
@@ -824,21 +746,6 @@ async function joinExistingRoom(roomName) {
             document.getElementById('roomContainer').style.display = 'block';
         }
 
-        // Update progress continuously
-        setInterval(updateProgressBar, 100);
-
-        // Handle audio ended event
-        window.audio.addEventListener('ended', () => {
-            if (window.isPlayer) {
-                nextSong();
-            }
-        });
-
-        // Make functions globally available
-        window.updatePlayerState = updatePlayerState;
-        window.updateProgressBar = updateProgressBar;
-        window.renderSongList = renderSongList;
-        window.formatTime = formatTime;
     </script>
 </body>
 </html>
