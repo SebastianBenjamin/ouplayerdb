@@ -155,7 +155,7 @@
 
         .cancel-btn {
             background: #6c757d;
-            margin-top: 10px;
+          
         }
 
         .audio-preview {
@@ -213,7 +213,7 @@
     <div class="container" id="uploadContainer" style="display: none;">
         <h1 id="formTitle">Upload Song</h1>
         <div class="user-header">
-            <span>Welcome,&nbsp;<span style="font-weight: bold;" id="userDisplayName"></span>!</span>
+            <span>Welcome,&nbsp;<span style="font-weight: bold; color: #1a73e8;" id="userDisplayName"></span>&nbsp;!</span>
         </div>
         <br>
         <div class="form-group">
@@ -238,9 +238,12 @@
         <div class="progress-bar" id="progressBar">
             <div class="progress" id="progress"></div>
         </div>
-        <button id="submitButton" onclick="uploadSong()">Upload</button>
-        <button id="cancelButton" onclick="cancelEdit()" class="cancel-btn" style="display: none;">Cancel</button>
-        <button onclick="logout()" style="margin-top: 10px; background: #dc3545;">Logout</button>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+
+            <button id="submitButton" onclick="uploadSong()">Upload</button>
+            <button id="cancelButton" onclick="cancelEdit()" class="cancel-btn" style="display: none;">Cancel</button>
+            <button onclick="logout()" style="background: #dc3545;">Logout</button>
+        </div>
 
         <div class="songs-list" id="songsList">
             <h2>Your Songs</h2>

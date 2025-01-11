@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Sync</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .player-container {
+            display: none;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .songs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .song-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 1px solid #eee;
+        }
+        .song-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .song-card.active {
+            border-color: #007bff;
+            background: #f8f9ff;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .role-switch {
+            padding: 8px 16px;
+            background: #28a745;
+        }
+        #nowPlaying {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loginForm" class="login-container">
+            <h2>Login to Music Sync</h2>
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter username">
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter password">
+            </div>
+            <button onclick="login()">Login</button>
+        </div>
+
+        <div id="playerContainer" class="player-container">
+            <div class="header">
+                <h2>Music Sync</h2>
+                <div>
+                    <span id="userDisplay"></span>
+                    <button class="role-switch" onclick="toggleRole()">Switch Role</button>
+                    <button onclick="logout()">Logout</button>
+                </div>
+            </div>
+            
+            <div id="songsList" class="songs-grid"></div>
+            
+            <div id="nowPlaying">
+                <h3>Now Playing</h3>
+                <div id="currentSong">No song playing</div>
+                <audio id="audioPlayer" controls></audio>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Firebase configuration
+const firebaseConfig = {
+    databaseURL: "https://web-test-1-d3b35-default-rtdb.firebaseio.com"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+let currentUser = null;
+let isPlayer = false;
+let songs = [];
+
+// Check for existing session
+window.onload = () => {
+    const savedUser = localStorage.getItem('musicAppUser');
+    if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        showPlayerInterface();
+        loadSongs();
+        initializeRoomListener();
+    }
+};
+
+function login() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    database.ref(`users/${username}`).once('value')
+        .then((snapshot) => {
+            const userData = snapshot.val();
+            if (userData && userData.password === password) {
+                currentUser = { username };
+                localStorage.setItem('musicAppUser', JSON.stringify(currentUser));
+                showPlayerInterface();
+                loadSongs();
+                initializeRoomListener();
+            } else {
+                alert('Invalid credentials');
+            }
+        })
+        .catch(error => {
+            console.error('Login error:', error);
+            alert('Login failed');
+        });
+}
+
+function logout() {
+    localStorage.removeItem('musicAppUser');
+    currentUser = null;
+    isPlayer = false;
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('playerContainer').style.display = 'none';
+}
+
+function showPlayerInterface() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('playerContainer').style.display = 'block';
+    document.getElementById('userDisplay').textContent = `User: ${currentUser.username}`;
+}
+
+function loadSongs() {
+    database.ref('songs').once('value')
+        .then((snapshot) => {
+            const songsData = snapshot.val();
+            songs = Object.entries(songsData).map(([id, data]) => ({
+                id,
+                ...data
+            }));
+            displaySongs();
+        });
+}
+
+function displaySongs() {
+    const songsList = document.getElementById('songsList');
+    songsList.innerHTML = songs.map(song => `
+        <div class="song-card" onclick="selectSong('${song.id}')">
+            <h3>${song.name}</h3>
+            <p>Artist: ${song.artist}</p>
+            <p>Genre: ${song.genre}</p>
+        </div>
+    `).join('');
+}
+
+function selectSong(songId) {
+    if (!isPlayer) {
+        alert('Only players can select songs');
+        return;
+    }
+
+    const song = songs.find(s => s.id === songId);
+    if (!song) return;
+
+    // Update room status
+    database.ref('room/chikkus').set({
+        playing: currentUser.username,
+        song: songId,
+        status: '',
+        time: '0:00'
+    });
+
+    playSong(song);
+}
+
+function playSong(song) {
+    const audioPlayer = document.getElementById('audioPlayer');
+    const currentSongDisplay = document.getElementById('currentSong');
+    
+    audioPlayer.src = song.url;
+    currentSongDisplay.textContent = `${song.name} - ${song.artist}`;
+    
+    if (isPlayer) {
+        audioPlayer.play();
+    }
+}
+
+function toggleRole() {
+    isPlayer = !isPlayer;
+    const roleSwitch = document.querySelector('.role-switch');
+    roleSwitch.textContent = isPlayer ? 'Switch to Listener' : 'Switch to Player';
+    
+    if (!isPlayer) {
+        const audioPlayer = document.getElementById('audioPlayer');
+        audioPlayer.pause();
+    }
+}
+
+function initializeRoomListener() {
+    database.ref('room/chikkus').on('value', (snapshot) => {
+        const roomData = snapshot.val();
+        if (!roomData) return;
+
+        if (!isPlayer && roomData.playing !== currentUser.username) {
+            const song = songs.find(s => s.id === roomData.song);
+            if (song) {
+                playSong(song);
+            }
+        }
+    });
+}
+    </script>
+</body>
+</html>
