@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OURPLAYER DB</title>
+    <title>Our Player Upload</title>
     <style>
         * {
             margin: 0;
@@ -141,6 +141,7 @@
             transform: translate(-50%, -50%);
             max-width: 400px;
             width: 90%;
+            color: black;
         }
 
         .songs-list {
@@ -195,7 +196,7 @@
 </head>
 <body>
     <div class="container" id="loginContainer">
-        <h1>OURPLAYER DB</h1>
+        <h1>Our Player Upload</h1>
         <div id="loginForm">
             <div class="form-group">
                 <input type="text" id="username" required placeholder="Username">
@@ -475,6 +476,7 @@
                 url: downloadURL,
                 uploadedBy: currentUser
             });
+            set(ref(db,`Genre/${genre}`),genre);
 
             document.getElementById('progressBar').style.display = 'none';
             document.getElementById('progress').style.width = '0%';
