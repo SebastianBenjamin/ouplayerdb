@@ -195,6 +195,33 @@
                 padding: 8px 16px;
             }
         }
+        /* Add to your existing CSS */
+.footer {
+    background: #1a1a1a;
+    color: #888;
+    text-align: center;
+    padding: 15px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    border-top: 1px solid #333;
+    font-size: 14px;
+    z-index: 1000;
+}
+
+.footer a {
+    color: #1db954;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    text-decoration: underline;
+}
+
+/* Add some bottom padding to the container to prevent footer overlap */
+.container {
+    padding-bottom: 60px;
+}
     </style>
 </head>
 <body>
@@ -246,6 +273,9 @@
             <button onclick="closeModal()" style="margin-top: 10px;">Close</button>
         </div>
     </div>
+    <footer class="footer">
+        &copy; 2025 Benjamin Sebastian and Shravya C Salian. All rights reserved.
+    </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
