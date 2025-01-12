@@ -249,6 +249,195 @@
                 gap: 10px;
             }
         }
+        .share-section {
+            margin: 10px 0;
+            padding: 10px;
+            background: #3a3a3a;
+            border-radius: 5px;
+        }
+
+        .share-section input {
+            margin: 5px 0;
+        }
+
+        .mode-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .mode-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 5px;
+        }
+
+        .mode-btn.active {
+            color: #1db954;
+        }
+
+        .room-info {
+            background: #3a3a3a;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .copy-btn {
+            padding: 5px 10px;
+            background: #1db954;
+            border: none;
+            border-radius: 3px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .copy-btn:hover {
+            background: #1ed760;
+        }
+        .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+    animation: fadeIn 0.3s;
+}
+
+.modal-content {
+    background-color: #2a2a2a;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 500px;
+    position: relative;
+    animation: slideIn 0.3s;
+}
+
+.close-btn {
+    color: #888;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    color: #fff;
+}
+
+.share-inputs {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.share-inputs input {
+    flex: 1;
+}
+
+#copyStatus {
+    text-align: center;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+#copyStatus.success {
+    background-color: rgba(29, 185, 84, 0.2);
+    color: #1db954;
+}
+
+#copyStatus.error {
+    background-color: rgba(255, 0, 0, 0.2);
+    color: #ff4444;
+}
+
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+@keyframes slideIn {
+    from {transform: translateY(-20px); opacity: 0;}
+    to {transform: translateY(0); opacity: 1;}
+}
+.song-item {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        margin: 5px 0;
+        background: #3a3a3a;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .song-item:hover {
+        background: #4a4a4a;
+    }
+
+    .song-item.playing {
+        background: #1db95448;
+        color: white;
+    }
+
+    .song-item img {
+        width: 50px;
+        height: 50px;
+        margin-right: 10px;
+        border-radius: 5px;
+    }
+
+    .control-btn {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        font-size: 24px;
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .control-btn img {
+        width: 24px;
+        height: 24px;
+    }
+
+    .mode-btn {
+        background: none;
+        border: none;
+        color: #888;
+        cursor: pointer;
+        padding: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .mode-btn img {
+        width: 20px;
+        height: 20px;
+        opacity: 0.5;
+        transition: opacity 0.3s;
+    }
+
+    .mode-btn.active img {
+        opacity: 1;
+    }
     </style>
 </head>
 <body>
@@ -307,6 +496,7 @@
                     <img id="currentSongImg" src="https://img.icons8.com/ios-filled/200/40C057/apple-music.png" alt="Song cover" style="width: 200px; height: 200px; display: block; margin: 20px auto;">
                     <h3 id="currentSongTitle" style="text-align: center">No song playing</h3>
                 </div>
+
                 
                 <div class="progress-container">
                     <div class="progress-bar" id="progressBar">
@@ -318,19 +508,84 @@
                     </div>
                 </div>
                 
-                <div class="controls">
-                    <button class="control-btn" onclick="previousSong()">⏮</button>
-                    <button class="control-btn" id="playPauseBtn" onclick="togglePlay()">▶</button>
-                    <button class="control-btn" onclick="nextSong()">⏭</button>
+                <!-- Body content remains the same until the controls section -->
+<div class="controls">
+    <button class="control-btn" onclick="previousSong()">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/skip-to-start--v1.png" alt="Previous">
+    </button>
+    <button class="control-btn" id="playPauseBtn" onclick="togglePlay()">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/play--v1.png" alt="Play" id="playPauseIcon">
+    </button>
+    <button class="control-btn" onclick="nextSong()">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/end--v1.png" alt="Next">
+    </button>
+</div>
+                 
+<div class="mode-controls">
+    <button class="mode-btn" id="shuffleBtn" onclick="toggleShuffle()" title="Shuffle">
+        <img src="https://img.icons8.com/ios-filled/50/888888/shuffle.png" alt="Shuffle" id="shuffleIcon">
+    </button>
+    <button class="mode-btn" id="repeatBtn" onclick="toggleRepeat()" title="Repeat">
+        <img src="https://img.icons8.com/ios-filled/50/888888/repeat.png" alt="Repeat" id="repeatIcon">
+    </button>
+</div>
+        
+        <div id="shareModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close-btn">&times;</span>
+                <h3>Share Room</h3>
+                <div class="share-inputs">
+                    <input type="text" id="roomLink" readonly>
+                    <button class="btn" onclick="copyRoomLink()">Copy Link</button>
                 </div>
+                <p id="copyStatus" style="margin-top: 10px;"></p>
+            </div>
+        </div>
             </div>
         </div>
     </div>
 
+   
     <script type="module">
-     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
 import { getDatabase, ref, onValue, set, get, remove } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
 
+// First, define all window functions that will be used globally
+window.joinRoom = async () => {
+    if (!checkAuth()) return;
+
+    let roomName, roomPassword;
+    if (!localStorage.getItem('room')) {
+        roomName = document.getElementById('joinRoomName').value;
+        roomPassword = document.getElementById('joinRoomPassword').value;
+        localStorage.setItem('room', roomName);
+        localStorage.setItem('roomp', roomPassword);
+    } else {
+        roomName = localStorage.getItem('room');
+        roomPassword = localStorage.getItem('roomp');
+    }
+
+    const roomRef = ref(db, 'rooms/' + roomName);
+    const snapshot = await get(roomRef);
+
+    if (!snapshot.exists()) {
+        alert('Room not found');
+        localStorage.removeItem('room');
+        localStorage.removeItem('roomp');
+        return;
+    }
+
+    if (snapshot.val().password !== roomPassword) {
+        alert('Incorrect password');
+        return;
+    }
+
+    await set(ref(db, `rooms/${roomName}/members/${window.currentUser}`), true);
+    joinExistingRoom(roomName);
+    updateRoomInfo();
+};
+
+// Then initialize Firebase and global state
 const firebaseConfig = {
     apiKey: "AIzaSyA_-SNMVZQVQM-eDK3aY_kGYg2hFigWTfo",
     authDomain: "web-test-1-d3b35.firebaseapp.com",
@@ -345,19 +600,116 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Global state
 window.currentUser = localStorage.getItem('currentUser');
-window.currentRoom = null;
-window.isPlayer = false;
-window.audio = new Audio();
-window.currentSongIndex = 0;
-window.songs = [];
-window.filteredSongs = [];
-         
+    window.currentRoom = null;
+    window.isPlayer = false;
+    window.audio = new Audio();
+    window.currentSongIndex = 0;
+    window.songs = [];
+    window.filteredSongs = [];
+    window.shuffleMode = false;
+    window.repeatMode = 'off';
+    window.shuffledIndices = [];
+    function initializeControls() {
+        const shuffleBtn = document.getElementById('shuffleBtn');
+        const repeatBtn = document.getElementById('repeatBtn');
+        const shuffleIcon = document.getElementById('shuffleIcon');
+        const repeatIcon = document.getElementById('repeatIcon');
         
+        if (shuffleBtn && shuffleIcon) {
+            shuffleBtn.classList.toggle('active', window.shuffleMode);
+            shuffleIcon.src = window.shuffleMode 
+                ? "https://img.icons8.com/ios-filled/50/1db954/shuffle.png"
+                : "https://img.icons8.com/ios-filled/50/888888/shuffle.png";
+        }
+        
+        if (repeatBtn && repeatIcon) {
+            repeatBtn.classList.toggle('active', window.repeatMode !== 'off');
+            updateRepeatIcon();
+        }
+    }
+    function updateRepeatIcon() {
+        const repeatIcon = document.getElementById('repeatIcon');
+        if (!repeatIcon) return;
+        
+        switch (window.repeatMode) {
+            case 'one':
+                repeatIcon.src = "https://img.icons8.com/ios-filled/50/1db954/repeat-one.png";
+                break;
+            case 'all':
+                repeatIcon.src = "https://img.icons8.com/ios-filled/50/1db954/repeat.png";
+                break;
+            default:
+                repeatIcon.src = "https://img.icons8.com/ios-filled/50/888888/repeat.png";
+        }
+    }
+
+function checkAuth() {
+    if (!window.currentUser) {
+        window.location.href = './index.html';
+        return false;
+    }
+    return true;
+}
+
+// URL Parameter Handling
+function initializeUrlParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomFromUrl = urlParams.get('room');
+    const passwordFromUrl = urlParams.get('password');
+    
+    if (roomFromUrl && passwordFromUrl) {
+        localStorage.setItem('room', roomFromUrl);
+        localStorage.setItem('roomp', passwordFromUrl);
+        window.joinRoom();
+    } else {
+        const savedRoom = localStorage.getItem('room');
+        const savedRoomPassword = localStorage.getItem('roomp');
+
+        if (savedRoom && savedRoomPassword) {
+            window.joinRoom();
+        } else {
+            document.getElementById('roomContainer').style.display = 'block';
+        }
+    }
+}
+
+ // Modified initialization
+ document.addEventListener('DOMContentLoaded', () => {
         loadSongs();
         loadAvailableOptions();
-  
+        initializeControls();
+        initializeUrlParams();
+        
+        // Add event listeners for audio
+        window.audio.addEventListener('ended', () => {
+            if (!window.isPlayer) return;
+            
+            if (window.repeatMode === 'one') {
+                window.audio.currentTime = 0;
+                window.audio.play();
+                return;
+            }
+            
+            let nextIndex;
+            if (window.shuffleMode) {
+                const currentShuffleIndex = window.shuffledIndices.indexOf(window.currentSongIndex);
+                nextIndex = window.shuffledIndices[(currentShuffleIndex + 1) % window.shuffledIndices.length];
+            } else {
+                nextIndex = (window.currentSongIndex + 1) % window.filteredSongs.length;
+            }
+            
+            if (nextIndex === 0 && window.repeatMode === 'off') {
+                window.audio.pause();
+                return;
+            }
+            
+            selectSong(nextIndex);
+        });
+
+        window.audio.addEventListener('timeupdate', updateProgressBar);
+    });
+
 // Load songs
 async function loadSongs() {
     const songsRef = ref(db, 'songs');
@@ -376,10 +728,8 @@ async function loadAvailableOptions() {
         const options = snapshot.val();
         const genreSelect = document.getElementById('genreSelection');
         
-        // Clear existing options
         genreSelect.innerHTML = '';
         
-        // Add options to select element
         Object.entries(options).forEach(([key, value]) => {
             const option = document.createElement('option');
             option.value = key;
@@ -387,7 +737,6 @@ async function loadAvailableOptions() {
             genreSelect.appendChild(option);
         });
         
-        // Add instructions
         const instruction = document.createElement('option');
         instruction.disabled = true;
         instruction.selected = true;
@@ -400,6 +749,8 @@ async function loadAvailableOptions() {
 
 // Create Room
 window.createRoom = async () => {
+    if (!checkAuth()) return;
+
     const roomName = document.getElementById('newRoomName').value;
     const roomPassword = document.getElementById('newRoomPassword').value;
     const genreSelect = document.getElementById('genreSelection');
@@ -437,39 +788,9 @@ window.createRoom = async () => {
     localStorage.setItem('room', roomName);
     localStorage.setItem('roomp', roomPassword);
     joinExistingRoom(roomName);
+    updateRoomInfo();
 };
 
-// Join Room
-window.joinRoom = async () => {
-    let roomName, roomPassword;
-    if (!localStorage.getItem('room')) {
-        roomName = document.getElementById('joinRoomName').value;
-        roomPassword = document.getElementById('joinRoomPassword').value;
-        localStorage.setItem('room', roomName);
-        localStorage.setItem('roomp', roomPassword);
-    } else {
-        roomName = localStorage.getItem('room');
-        roomPassword = localStorage.getItem('roomp');
-    }
-
-    const roomRef = ref(db, 'rooms/' + roomName);
-    const snapshot = await get(roomRef);
-
-    if (!snapshot.exists()) {
-        alert('Room not found');
-        localStorage.removeItem('room');
-        localStorage.removeItem('roomp');
-        return;
-    }
-
-    if (snapshot.val().password !== roomPassword) {
-        alert('Incorrect password');
-        return;
-    }
-
-    await set(ref(db, `rooms/${roomName}/members/${window.currentUser}`), true);
-    joinExistingRoom(roomName);
-};
 
 // Join Existing Room
 async function joinExistingRoom(roomName) {
@@ -506,21 +827,67 @@ function initializeRoomListeners() {
             updatePlayerState(data.currentSong);
         }
 
-        // Re-render song list when room data changes (e.g., genres update)
         await renderSongList();
     });
 }
 
-// Playback Controls
 window.togglePlay = () => {
-    if (!window.isPlayer && !window.audio.src) return;
-    
-    const newStatus = window.audio.paused ? 'playing' : 'paused';
-    updateRoomPlayback({
-        status: newStatus,
-        currentTime: window.audio.currentTime
-    });
-};
+        if (!window.isPlayer && !window.audio.src) return;
+        
+        const newStatus = window.audio.paused ? 'playing' : 'paused';
+        const playPauseIcon = document.getElementById('playPauseIcon');
+        
+        if (playPauseIcon) {
+            playPauseIcon.src = newStatus === 'playing' 
+                ? "https://img.icons8.com/ios-filled/50/ffffff/pause--v1.png"
+                : "https://img.icons8.com/ios-filled/50/ffffff/play--v1.png";
+        }
+        
+        updateRoomPlayback({
+            status: newStatus,
+            currentTime: window.audio.currentTime
+        });
+    };
+
+    window.toggleShuffle = () => {
+        if (!window.isPlayer) return;
+        
+        window.shuffleMode = !window.shuffleMode;
+        const shuffleBtn = document.getElementById('shuffleBtn');
+        const shuffleIcon = document.getElementById('shuffleIcon');
+        
+        if (shuffleBtn && shuffleIcon) {
+            shuffleBtn.classList.toggle('active');
+            shuffleIcon.src = window.shuffleMode 
+                ? "https://img.icons8.com/ios-filled/50/1db954/shuffle.png"
+                : "https://img.icons8.com/ios-filled/50/888888/shuffle.png";
+        }
+        
+        if (window.shuffleMode) {
+            window.shuffledIndices = [...Array(window.filteredSongs.length).keys()];
+            for (let i = shuffledIndices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledIndices[i], shuffledIndices[j]] = [shuffledIndices[j], shuffledIndices[i]];
+            }
+        }
+    };
+
+
+
+    window.toggleRepeat = () => {
+        if (!window.isPlayer) return;
+        
+        const modes = ['off', 'one', 'all'];
+        const currentIndex = modes.indexOf(window.repeatMode);
+        window.repeatMode = modes[(currentIndex + 1) % modes.length];
+        
+        const repeatBtn = document.getElementById('repeatBtn');
+        if (repeatBtn) {
+            repeatBtn.classList.toggle('active', window.repeatMode !== 'off');
+            updateRepeatIcon();
+        }
+    };
+
 
 window.selectSong = async (index) => {
     if (!window.isPlayer) {
@@ -537,87 +904,6 @@ window.selectSong = async (index) => {
         status: 'playing',
         currentTime: 0
     });
-};
-
-async function updateRoomPlayback(state) {
-    await set(ref(db, `rooms/${window.currentRoom}/currentSong`), {
-        ...state,
-        timestamp: Date.now()
-    });
-}
-
-function updatePlayerState(data) {
-    const playPauseBtn = document.getElementById('playPauseBtn');
-    const currentSongTitle = document.getElementById('currentSongTitle');
-    
-    if (data.songIndex !== undefined) {
-        const song = window.filteredSongs[data.songIndex];
-        if (song) {
-            window.audio.src = song.url;
-            currentSongTitle.textContent = song.name;
-        }
-    }
-
-    if (data.status === 'playing') {
-        const timeDiff = (Date.now() - data.timestamp) / 1000;
-        window.audio.currentTime = data.currentTime + timeDiff;
-        window.audio.play();
-        playPauseBtn.textContent = '⏸';
-    } else {
-        window.audio.pause();
-        window.audio.currentTime = data.currentTime;
-        playPauseBtn.textContent = '▶';
-    }
-
-    updateProgressBar();
-}
-
-// Progress Bar and Time Display
-function updateProgressBar() {
-    const progress = document.getElementById('progress');
-    const currentTimeDisplay = document.getElementById('currentTime');
-    const durationDisplay = document.getElementById('duration');
-
-    if (window.audio.duration) {
-        const percentage = (window.audio.currentTime / window.audio.duration) * 100;
-        progress.style.width = percentage + '%';
-        currentTimeDisplay.textContent = formatTime(window.audio.currentTime);
-        durationDisplay.textContent = formatTime(window.audio.duration);
-    }
-}
-
-function formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
-
-// Progress Bar Click Handler
-document.getElementById('progressBar').addEventListener('click', (e) => {
-    if (!window.isPlayer) return;
-    
-    const progressBar = e.currentTarget;
-    const clickPosition = (e.clientX - progressBar.getBoundingClientRect().left) / progressBar.offsetWidth;
-    const newTime = clickPosition * window.audio.duration;
-    
-    updateRoomPlayback({
-        currentTime: newTime,
-        status: window.audio.paused ? 'paused' : 'playing',
-        timestamp: Date.now()
-    });
-});
-
-// Previous/Next Controls
-window.previousSong = () => {
-    if (!window.isPlayer) return;
-    window.currentSongIndex = (window.currentSongIndex - 1 + window.filteredSongs.length) % window.filteredSongs.length;
-    selectSong(window.currentSongIndex);
-};
-
-window.nextSong = () => {
-    if (!window.isPlayer) return;
-    window.currentSongIndex = (window.currentSongIndex + 1) % window.filteredSongs.length;
-    selectSong(window.currentSongIndex);
 };
 
 // Room Management
@@ -656,7 +942,6 @@ window.leaveRoom = async () => {
     document.getElementById('roomContainer').style.display = 'block';
 };
 
-// Delete Room
 window.deleteRoom = async () => {
     const roomRef = ref(db, `rooms/${window.currentRoom}`);
     const snapshot = await get(roomRef);
@@ -692,6 +977,164 @@ window.deleteRoom = async () => {
     }
 };
 
+// Share room functionality
+window.shareRoom = () => {
+    const modal = document.getElementById('shareModal');
+    const roomLink = document.getElementById('roomLink');
+    const currentUrl = window.location.href.split('?')[0]; // Get base URL without parameters
+    const shareUrl = `${currentUrl}?room=${window.currentRoom}&password=${localStorage.getItem('roomp')}`;
+    
+    roomLink.value = shareUrl;
+    modal.style.display = 'block';
+    roomLink.select(); // Select the link text for easy copying
+};
+
+window.copyRoomLink = async () => {
+    const roomLink = document.getElementById('roomLink');
+    const copyStatus = document.getElementById('copyStatus');
+    
+    try {
+        await navigator.clipboard.writeText(roomLink.value);
+        copyStatus.textContent = 'Link copied successfully!';
+        copyStatus.className = 'success';
+        
+        // Clear the success message after 3 seconds
+        setTimeout(() => {
+            copyStatus.textContent = '';
+            copyStatus.className = '';
+        }, 3000);
+    } catch (err) {
+        copyStatus.textContent = 'Failed to copy link. Please try again.';
+        copyStatus.className = 'error';
+    }
+};
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('shareModal');
+    const closeBtn = document.querySelector('.close-btn');
+
+    closeBtn.onclick = () => {
+        modal.style.display = 'none';
+    };
+
+    window.onclick = (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    };
+});
+
+// Helper Functions
+function updateRoomInfo() {
+    const roomInfoHtml = `
+        <div class="room-info">
+            <div>
+                <strong>Room:</strong> ${window.currentRoom}
+                <br>
+                <strong>Password:</strong> ${localStorage.getItem('roomp')}
+            </div>
+            <button class="copy-btn" onclick="shareRoom()">Share Room</button>
+        </div>
+    `;
+    document.getElementById('roomNameDisplay').insertAdjacentHTML('afterend', roomInfoHtml);
+}
+
+async function updateRoomPlayback(state) {
+    await set(ref(db, `rooms/${window.currentRoom}/currentSong`), {
+        ...state,
+        timestamp: Date.now()
+    });
+}
+
+// Update the updatePlayerState function to handle icon changes
+function updatePlayerState(data) {
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const playPauseIcon = document.getElementById('playPauseIcon');
+        const currentSongTitle = document.getElementById('currentSongTitle');
+        
+        if (data.songIndex !== undefined) {
+            const song = window.filteredSongs[data.songIndex];
+            if (song) {
+                window.audio.src = song.url;
+                currentSongTitle.textContent = song.name;
+                window.currentSongIndex = data.songIndex;
+                renderSongList(); // Re-render to update highlighting
+            }
+        }
+
+        if (data.status === 'playing') {
+            const timeDiff = (Date.now() - data.timestamp) / 1000;
+            window.audio.currentTime = data.currentTime + timeDiff;
+            window.audio.play();
+            playPauseIcon.src = "https://img.icons8.com/ios-filled/50/ffffff/pause--v1.png";
+        } else {
+            window.audio.pause();
+            window.audio.currentTime = data.currentTime;
+            playPauseIcon.src = "https://img.icons8.com/ios-filled/50/ffffff/play--v1.png";
+        }
+
+        updateProgressBar();
+    }
+function updateProgressBar() {
+    const progress = document.getElementById('progress');
+    const currentTimeDisplay = document.getElementById('currentTime');
+    const durationDisplay = document.getElementById('duration');
+
+    if (window.audio.duration) {
+        const percentage = (window.audio.currentTime / window.audio.duration) * 100;
+        progress.style.width = percentage + '%';
+        currentTimeDisplay.textContent = formatTime(window.audio.currentTime);
+        durationDisplay.textContent = formatTime(window.audio.duration);
+    }
+}
+
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+// Event Listeners
+window.audio.addEventListener('ended', () => {
+    if (!window.isPlayer) return;
+    
+    if (window.repeatMode === 'one') {
+        window.audio.currentTime = 0;
+        window.audio.play();
+        return;
+    }
+    
+    let nextIndex;
+    if (window.shuffleMode) {
+        const currentShuffleIndex = window.shuffledIndices.indexOf(window.currentSongIndex);
+        nextIndex = window.shuffledIndices[(currentShuffleIndex + 1) % window.shuffledIndices.length];
+    } else {
+        nextIndex = (window.currentSongIndex + 1) % window.filteredSongs.length;
+    }
+    
+    if (nextIndex === 0 && window.repeatMode === 'off') {
+        window.audio.pause();
+        return;
+    }
+    
+    selectSong(nextIndex);
+});
+
+window.audio.addEventListener('timeupdate', updateProgressBar);
+
+document.getElementById('progressBar').addEventListener('click', (e) => {
+    if (!window.isPlayer) return;
+    
+    const progressBar = e.currentTarget;
+    const clickPosition = (e.clientX - progressBar.getBoundingClientRect().left) / progressBar.offsetWidth;
+    const newTime = clickPosition * window.audio.duration;
+    
+    updateRoomPlayback({
+        currentTime: newTime,
+        status: window.audio.paused ? 'paused' : 'playing',
+        timestamp: Date.now()
+    });
+});
+
 // Tab Management
 window.showTab = (tabName) => {
     document.getElementById('createRoomTab').style.display = tabName === 'create' ? 'block' : 'none';
@@ -705,46 +1148,66 @@ window.showTab = (tabName) => {
         }
     });
 };
-// Render Song List
-async function renderSongList() {
-    const roomRef = ref(db, `rooms/${window.currentRoom}`);
-    const snapshot = await get(roomRef);
-    document.title = `Our Player/${window.currentRoom}`;
-    
-    if (!snapshot.exists()) {
-        alert('Room not found');
-        localStorage.removeItem('room');
-        localStorage.removeItem('roomp');
-        return;
-    }
 
-    const roomData = snapshot.val();
-    const roomGenres = roomData.genres;
-
-    window.filteredSongs = window.songs.filter(song => roomGenres.includes(song.genre));
-
-    const songList = document.getElementById('songList');
-    songList.innerHTML = window.filteredSongs.map((song, index) => `
-        <div class="song-item" onclick="selectSong(${index})">
-            <img src="https://img.icons8.com/ios-filled/50/40C057/apple-music.png" alt="Song cover">
-            <div>
-                <h4>${song.name}</h4>
-                <p>${song.artist}</p>
-            </div>
-        </div>
-    `).join('');
-}
-
-const savedRoom = localStorage.getItem('room');
-        const savedRoomPassword = localStorage.getItem('roomp');
-
-        if (savedRoom && savedRoomPassword) {
-            await joinRoom();
-            
-        } else {
-            
-            document.getElementById('roomContainer').style.display = 'block';
+  // Modify the renderSongList function to highlight current song
+  async function renderSongList() {
+        const roomRef = ref(db, `rooms/${window.currentRoom}`);
+        const snapshot = await get(roomRef);
+        document.title = `Our Player/${window.currentRoom}`;
+        
+        if (!snapshot.exists()) {
+            alert('Room not found');
+            localStorage.removeItem('room');
+            localStorage.removeItem('roomp');
+            return;
         }
+
+        const roomData = snapshot.val();
+        const roomGenres = roomData.genres;
+
+        window.filteredSongs = window.songs.filter(song => roomGenres.includes(song.genre));
+
+        const songList = document.getElementById('songList');
+        songList.innerHTML = window.filteredSongs.map((song, index) => `
+            <div class="song-item ${index === window.currentSongIndex ? 'playing' : ''}" onclick="selectSong(${index})">
+                <img src="https://img.icons8.com/ios-filled/50/40C057/apple-music.png" alt="Song cover">
+                <div>
+                    <h4>${song.name}</h4>
+                    <p>${song.artist}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+// Navigation Controls
+window.previousSong = () => {
+    if (!window.isPlayer) return;
+    
+    if (window.shuffleMode) {
+        const currentShuffleIndex = window.shuffledIndices.indexOf(window.currentSongIndex);
+        const prevIndex = (currentShuffleIndex - 1 + window.shuffledIndices.length) % window.shuffledIndices.length;
+        window.currentSongIndex = window.shuffledIndices[prevIndex];
+    } else {
+        window.currentSongIndex = (window.currentSongIndex - 1 + window.filteredSongs.length) % window.filteredSongs.length;
+    }
+    
+    selectSong(window.currentSongIndex);
+};
+
+window.nextSong = () => {
+    if (!window.isPlayer) return;
+    
+    if (window.shuffleMode) {
+        const currentShuffleIndex = window.shuffledIndices.indexOf(window.currentSongIndex);
+        const nextIndex = (currentShuffleIndex + 1) % window.shuffledIndices.length;
+        window.currentSongIndex = window.shuffledIndices[nextIndex];
+    } else {
+        window.currentSongIndex = (window.currentSongIndex + 1) % window.filteredSongs.length;
+    }
+    
+    selectSong(window.currentSongIndex);
+};
+
+
 
     </script>
 </body>
